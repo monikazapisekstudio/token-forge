@@ -1,0 +1,159 @@
+{
+  "variables": {
+    "colors": {
+      "name": "Colors",
+      "modes": ["Light", "Dark"],
+      "tokens": {
+        "primary": {
+          "$type": "color",
+          "$value": {
+            "Light": "#4A3C78",
+            "Dark": "#8B7AB8"
+          },
+          "$description": "Brand primary color"
+        },
+        "secondary": {
+          "$type": "color",
+          "$value": {
+            "Light": "#7C6A9E",
+            "Dark": "#A897C4"
+          }
+        },
+        "accent": {
+          "$type": "color",
+          "$value": {
+            "Light": "#E8845A",
+            "Dark": "#FF9E7A"
+          }
+        },
+        "background": {
+          "$type": "color",
+          "$value": {
+            "Light": "#F6F6FA",
+            "Dark": "#1B1A1F"
+          }
+        },
+        "foreground": {
+          "$type": "color",
+          "$value": {
+            "Light": "#1B1A1F",
+            "Dark": "#F6F6FA"
+          }
+        },
+        "success": {
+          "$type": "color",
+          "$value": {
+            "Light": "#2B5035",
+            "Dark": "#4A7A5A"
+          }
+        },
+        "danger": {
+          "$type": "color",
+          "$value": {
+            "Light": "#B91C1C",
+            "Dark": "#E84A4A"
+          }
+        }
+      }
+    },
+    "typography": {
+      "name": "Typography",
+      "tokens": {
+        "font-sans": {
+          "$type": "string",
+          "$value": "Inter",
+          "$extensions": {
+            "com.figma.scopes": ["FONT_FAMILY"]
+          }
+        },
+        "font-heading": {
+          "$type": "string",
+          "$value": "Unbounded",
+          "$extensions": {
+            "com.figma.scopes": ["FONT_FAMILY"]
+          }
+        },
+        "font-mono": {
+          "$type": "string",
+          "$value": "JetBrains Mono",
+          "$extensions": {
+            "com.figma.scopes": ["FONT_FAMILY"]
+          }
+        },
+        "size-sm": {
+          "$type": "float",
+          "$value": 12
+        },
+        "size-base": {
+          "$type": "float",
+          "$value": 14
+        },
+        "size-lg": {
+          "$type": "float",
+          "$value": 18
+        },
+        "size-xl": {
+          "$type": "float",
+          "$value": 24
+        },
+        "radius-sm": {
+          "$type": "float",
+          "$value": 4
+        },
+        "radius-md": {
+          "$type": "float",
+          "$value": 8
+        },
+        "radius-lg": {
+          "$type": "float",
+          "$value": 12
+        }
+      }
+    },
+    "imported": {
+      "name": "Imported Tokens",
+      "tokens": {
+        "spacing-xs": {
+          "$type": "float",
+          "$value": 2
+        },
+        "spacing-sm": {
+          "$type": "float",
+          "$value": 4
+        },
+        "spacing-md": {
+          "$type": "float",
+          "$value": 8
+        },
+        "spacing-lg": {
+          "$type": "float",
+          "$value": 16
+        },
+        "spacing-xl": {
+          "$type": "float",
+          "$value": 24
+        },
+        "opacity-disabled": {
+          "$type": "float",
+          "$value": 0.4
+        },
+        "opacity-hover": {
+          "$type": "float",
+          "$value": 0.8
+        },
+        "shadow-sm": {
+          "$type": "string",
+          "$value": "0 1px 2px rgba(0,0,0,0.1)"
+        },
+        "shadow-md": {
+          "$type": "string",
+          "$value": "0 4px 8px rgba(0,0,0,0.12)"
+        },
+        "shadow-lg": {
+          "$type": "string",
+          "$value": "0 8px 24px rgba(0,0,0,0.16)"
+        }
+      }
+    }
+  }
+}

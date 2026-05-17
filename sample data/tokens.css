@@ -1,0 +1,20 @@
+/* Flat tokens without collection */
+--color-primary: #4A3C78;
+--color-secondary: #7C6A9E;
+--color-accent: #E8845A;
+--color-background: #F6F6FA;
+--color-foreground: #1B1A1F;
+--color-success: #2B5035;
+--color-warning: #C97A2E;
+--color-danger: #B91C1C;
+--color-border: #E0E0E0;
+--radius-sm: 4px;
+--radius-md: 8px;
+--radius-lg: 12px;
+--font-sans: Inter;
+--font-heading: Unbounded;
+--font-mono: JetBrains Mono;
+--size-sm: 12px;
+--size-base: 14px;
+--size-lg: 18px;
+--size-xl: 24px;

@@ -1,0 +1,14 @@
+{
+  "name": "figma-windly-importer",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "extract": "node scripts/extract-design-data.js",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "*",
+    "typescript": "^5.0.0"
+  }
+}

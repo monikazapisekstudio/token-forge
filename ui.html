@@ -1,0 +1,936 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font: 16px/1.5 Inter, system-ui, sans-serif;
+    color: var(--figma-color-text, #e6e6e6);
+    background: #1a110e;
+    padding: 10px 20px 20px 20px;
+    overflow-x: hidden;
+    position: relative;
+  }
+  h2 { font-size: 19px; font-weight: 600; margin-bottom: 2px; line-height: 24px; }
+  h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .sub { font-size: 14px; color: var(--figma-color-text-secondary, #9e9e9e); margin-bottom: 12px; line-height: 20px; }
+  textarea {
+    width: 100%; height: 400px; resize: vertical; margin-bottom: 4px;
+    border: 1px solid var(--figma-color-border); border-radius: 14px; padding: 14px 16px;
+    font: 12px Inter, system-ui, sans-serif;
+    background: #443935; color: var(--figma-color-text, #e6e6e6);
+    line-height: 1.5;
+  }
+  textarea:focus { outline: 2px solid var(--figma-color-border-selected); outline-offset: -1px; }
+  button {
+    padding: 6px 18px 6px 16px; border: none; border-radius: 12px; font-size: 14px; font-weight: 500;
+    cursor: pointer; font-family: Inter, system-ui, sans-serif; transition: opacity .15s;
+    height: 36px; letter-spacing: 0;
+  }
+  button:disabled { opacity: 0.4; cursor: default; }
+  .btn-primary { background: #72361e; color: #ffdbcf; }
+  .btn-primary:hover:not(:disabled) { background: #8a4224; }
+  .btn-primary svg { color: #ffdbcf; }
+  .btn-secondary { background: var(--figma-color-bg-secondary, #3a2e26); color: var(--figma-color-text, #e6e6e6); border: 1px solid var(--figma-color-border, #4a3a32); }
+  #btn-load-file, #btn-parse { font-size: 13px; }
+  #btn-import { font-size: 15px; }
+  #btn-import:hover:not(:disabled) { background: #d4ac9a !important; }
+  .btn-secondary:hover:not(:disabled) { background: var(--figma-color-bg-hover, #4a3a32); }
+  .btn-sm { font-size: 14px; }
+
+  .row { display: flex; gap: 8px; margin-top: 10px; align-items: flex-end; justify-content: center; width: 100%; }
+  select, input[type=text] {
+    padding: 8px 14px; border: 1px solid var(--figma-color-border); border-radius: 10px;
+    font-size: 14px; height: 40px; background: #3d322f; color: var(--figma-color-text);
+    font-family: Inter, system-ui, sans-serif;
+  }
+  select { appearance: none; padding-right: 14px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239e9e9e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; }
+  select:invalid { color: #d8c2bb; opacity: 0.8; }
+  select option { color: #f1dfd9; padding: 6px 12px; }
+  select option:checked { background: #e7beaf; color: #442a20; }
+  textarea::placeholder, input::placeholder { font-size: 13px; color: var(--figma-color-text-secondary, #9e9e9e); opacity: 0.8; }
+
+  .cdd { position: relative; width: 100%; cursor: pointer; user-select: none; }
+  .cdd.disabled { opacity: 0.6; pointer-events: none; }
+  .cdd-trigger {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 8px 14px; height: 40px;
+    border: 1px solid var(--figma-color-border); border-radius: 10px;
+    font-size: 13px; background: #3d322f; color: #f1dfd9; font-weight: 500;
+    font-family: Inter, system-ui, sans-serif;
+  }
+  .cdd-trigger.placeholder { color: var(--figma-color-text-secondary, #9e9e9e); }
+  .cdd-arrow {
+    width: 16px; height: 16px; flex-shrink: 0; opacity: 0.5; color: #d8c2bb;
+    transition: transform 0.15s;
+  }
+  .cdd-arrow.open { transform: rotate(180deg); }
+  .cdd-menu {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 100;
+    background: #2d2421; border: 1px solid var(--figma-color-border);
+    border-radius: 10px; padding: 4px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.3);
+    display: none; overflow: hidden;
+  }
+  .cdd-menu.open { display: flex; flex-direction: column; }
+  .cdd-menu.open .cdd-item { margin-bottom: 2px; }
+  .cdd-menu.open .cdd-item:last-child { margin-bottom: 0; }
+  .cdd-menu.open { display: block; }
+  .cdd-item {
+    display: flex; align-items: center; padding: 0 14px; height: 40px;
+    font-size: 13px; color: #f1dfd9; border-radius: 10px;
+    cursor: pointer; font-family: Inter, system-ui, sans-serif;
+  }
+  .cdd-item:hover { background: rgba(255,255,255,0.06); }
+  .cdd-item.active { background: #5d4035; color: #ffdbcf; }
+  .cdd-item.disabled { opacity: 0.4; cursor: default; }
+  .cdd-item.disabled:hover { background: transparent; }
+
+  .dev-banner {
+    position:fixed;top:0;left:0;right:0;
+    background:#ff9800;color:#000;text-align:center;
+    font-size:10px;font-weight:600;padding:3px;z-index:999;
+  }
+  .dev-banner + * { margin-top: 24px; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
+  input[type=text] { min-width: 0; }
+  label { font-size: 13px; font-weight: 500; display: block; margin-top: 6px; margin-bottom: 2px; }
+  .hint { font-size: 14px; color: var(--figma-color-text-tertiary); }
+  .radio-group { display: flex; gap: 6px; margin-top: 2px; }
+  .radio-group label { font-weight: 400; display: inline-flex; align-items: center; gap: 4px; margin: 0; cursor: pointer; font-family: Inter, system-ui, sans-serif; padding: 8px 12px; border: 1px solid #53433e; border-radius: 10px; background: #231a16; }
+  .radio-group label:has(input:checked) { background: #72361e; color: #ffdbcf; }
+  input[type=radio] { accent-color: #e7beaf; }
+  #collections-config { display: none; }
+  #collections-config.show { display: block; }
+  .collection-card {
+    background: #271e1a; border: 1px solid var(--figma-color-border);
+    border-radius: 16px; padding: 14px 16px 16px; margin-bottom: 10px;
+  }
+  .collection-card.card-flat { background: #221b18; border-style:dashed; }
+  .collection-card h3 {
+    font-size: 16px; font-weight: 600; margin-bottom: 4px;
+    display: flex; justify-content: space-between;
+  }
+  .collection-card .badge, .badge {
+    font-size: 12px; background: #5d4035; color: #ffdbcf;
+    padding: 1px 8px; border-radius: 10px; font-weight: 400; text-transform: none; white-space: nowrap;
+  }
+  .badge-tertiary {
+    font-size: 12px; background: #50471a; color: #f2e2a8;
+    padding: 1px 8px; border-radius: 10px; font-weight: 400; text-transform: none; white-space: nowrap;
+  }
+  .mode-list { display:flex; flex-direction:column; gap:0; width:100%; margin-top:8px; }
+  .mode-list-item { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:6px 0; border-top:1px solid var(--figma-color-border,#4a3a32); width:100%; }
+  .alert { position:relative; display:none; width:100%; flex-direction:column; align-items:flex-start; gap:2px; border-radius:12px; padding:14px 40px 14px 16px; font-size:12px; margin-bottom:16px; }
+  .alert.show { display:flex; }
+  .alert-error { background:#3a1515; color:#ffd6d4; }
+  .alert-success { background:#1a3a22; color:#d4fcda; }
+  .alert-info { background:#3a2a08; color:#f6dfa5; }
+  .alert-title { font-size:13px; font-weight:600; line-height:1.4; }
+  .alert-desc { font-size:12px; opacity:0.9; line-height:1.5; }
+  .alert-close { opacity:0.8; color:inherit; }
+  .field-error-msg { color:#ff6b6b; font-size:12px; margin-top:2px; display:none; }
+  .field-error-msg.show { display:block; }
+  .field-error { outline: 2px solid #ec221f; outline-offset: -1px; border-radius: 10px; }
+  .help-button { position:absolute; top:16px; right:16px; width:40px; height:40px; border:none; border-radius:50%; background:var(--figma-color-bg-secondary,#3a2e26); color:var(--figma-color-text-secondary,#9e9e9e); font-size:16px; font-weight:500; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:10; }
+  .mode-card { padding: 0; border: none; border-radius: 0; padding-top: 8px; margin-top: 12px; }
+  .mode-wrapper { border-left: 1px solid #a08d86; padding: 0 0 6px 16px; margin-top: 16px; }
+  .divider { border-top: 1px solid var(--figma-color-border); margin: 8px 0; }
+  .progress { margin-top: 12px; display: none; }
+  .progress.show { display: block; }
+  .progress-label { display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:500; margin-bottom:8px; }
+  .progress-pct { font-size:13px; color:var(--figma-color-text-secondary,#9e9e9e); }
+  .progress-bar-track {
+    width: 100%; height: 5px; background: var(--figma-color-bg-secondary);
+    border-radius: 3px; overflow: hidden; margin-bottom: 4px;
+  }
+  .progress-bar-fill { height: 100%; background: var(--figma-color-bg-brand); border-radius: 3px; width: 0%; transition: width .2s; }
+  .log { margin-top: 12px; display: none; max-height: 120px; overflow-y: auto; }
+  .log.show { display: block; }
+  .log-entry { font-size: 16px; padding: 2px 0; color: var(--figma-color-text-secondary); }
+  .log-entry.ok { color: var(--figma-color-text-success, #14ae5c); }
+  .log-entry.err { color: var(--figma-color-text-danger, #ec221f); }
+</style>
+</head>
+<body>
+<button class="help-button" onclick="showHelp()">?</button>
+<div style="display:flex;align-items:flex-start;gap:0px;margin-bottom:4px;margin-top:0px;flex-flow:column;height:fit-content;width:100%;justify-content:flex-start">
+  <div style="display:flex;flex-direction:row;align-items:flex-start;gap:12px;width:100%;height:fit-content">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAOdEVYdFNvZnR3YXJlAEZpZ21hnrGWYwAABVZJREFUeAHt3c9PFGccx/HvM/ujSrRQEk1oajOH0pC0SSm9u/VaDoWTPTV7oI3xIv8AocSTJ/FimrSHTXuRk/XQXqXeq7Tx0IgxkzQR0yaGaLF2Zne+Ps/KEoQFdpd1Z3Y+n1dClLCwIc97npmdYZ410iKd9YeijSNT4sUlozIuKr4YGZLXZOmhkWtrImv/7/+4iTdF5kZVRt6Qtq09F7l438jqM5Gn1b0fNzog8sXbKpMnJZ1U1u1YBGp0xVOznBsIb5jFYL2VbzUH/uxzY35VaxckNuXXOeDbXX5gZOlR648/nhf54aP2InCD/+UfZt+B32nmHfvxrko/sDFUaiZaOPptEOz3uD0DcFt8daPwjRhzQXro3oYdmN8P7HIXNxNc/bD1wTl/18jtJ9K2qx+oTAxKH9HFfBgtmErzGcFr+i12q689K97p9eA7tx5LR9w03o5OBr+T50memY2KxTv/nfP9Zl/dFUD41eh4LY5v2m3Jlz7SzlTeD8/TTXY+9XNx8aYb251feyUAt+V7xlzvt8Gng7kI7Ix+fedMsBWA2+f345ZPrWvMBFr2tw7mtwJwB3wc/OxzEVSLhfnG5/UA3NSfxAEfJcXMNnYF9QBqGs8LQcnHhfoG77n9gaqUhbDYMXdj70WFwpQQHmOGasXi557nmZIQpNjop566CzsEycRm3Ktf1SNQ6nu9usJHKWSPAzwhaAwAHAMAxwDAMQBwDAAcAwDHAMAxAHAMABwDAMcAwDEAcAwAHAMAxwDAMQBwDAAcAwDHAMAxAHB5yZCDFpTqhqdVY5+nO+sEdbKwVbdlKoDp39pfW6hdS2vuo3vP41YemzmlicXAXUDCfv775YJVSS09wwBSwO26fvlHEsEAUsItj5cEBpASvTiAbYYBgGMA4BgAOAYAjgGAYwDgGAA4BgCOAaTE8YQuy6UuAPfOH4hOvyWJSF8AgyKlYYHiLgWfTuh3TuUu4NKYytkRTWxa7KWJQa2/11FSv6uJvn4/1W+DldRFkl44lpPEI0/9NpaGP5vKMr4KAMcAwDEAcAwAHAMAxwDAMQBwqT0PsPTQyLW1bJ8Icuc43KnvWT+5M4GpDODyAyNLjyTzXNzuzqB7/xr5cTyZE7Kp2wW4GyQQBn8795b07p7DJKQugFuPBRLvDALHO4MoEQwAHAMAxwDAMQBwDAAcAwDHAMClLgCEPwVvhncGbRodEEi8M2iTuzw6eUKguMvCbsHIJKRywp0bVRk54i6Vmkz/PYCb9j87oTJzShKT+juDuuXi/ZdBHcbkSZW59yRT+CoAHAMAxwDAMQBwDAAcAwDHAMAxAHAMABwDAMcAwDEAcAwAHAMAxwDAMQBwDAAcAwDHAMAxAHAMABwDAMcAwDEAcAwAHAMAxwDAMQBwDAAcAwDHAMB5orIuhEl13RMjgRAoE3jGyIoQJBVd8eLY+1UIkt36l71C9PwnHgdgyoXhDc9UgnUxWhGCoqoVN/b1l4H5MHdFCEotihbcv/UATOXPwDaxKAQiXjxaCQL3v60TQfkwWjDCl4RZp3aM82F1ofH5VgBuf5ALvTOMILvc4NfC8Ez9uG/TK6eC3a4gVp1mBNnjBl9CnW5M/Q27rgUUv1tdyeJMcCwnh9aNn5GExpZfrKzuOunX9GKQmwnsa8SPs3RgWBqWQ/tkUPpQvFiwY7lzy284cPVkLY/5tUI8r0bK0ufO3zVy+4l0pDSscmlM+oM7sWfP7VTD6MpeA9/Q8vLZWvaHokJhyl49KtkYxu2T+Pa7h6TPfP9Xe8vQuyXdz46o/Ujxu5nUB1wCNfbcvppld4Zv+4Hefl4A+fWG9ZsSZo4AAAAASUVORK5CYII=" alt="TF" style="width:56px;height:56px;flex-shrink:0;margin-top:2px">
+    <div style="display:flex;flex-direction:column;align-items:flex-start;gap:0px">
+      <h2>Token Forge</h2>
+      <p class="sub" style="margin-top:-1px">Turn design tokens into variables<br>with collections and modes</p>
+    </div>
+  </div>
+</div>
+
+<label style="font-size:14px;font-weight:500;display:block;margin-top:6px;margin-bottom:6px">Paste your design tokens</label>
+<textarea id="json-in" placeholder="Paste design tokens. Auto-detected formats:
+
+{ &quot;primary&quot;: &quot;#4A3C78&quot; }
+Flat JSON - simplest
+
+--primary: #4A3C78;
+CSS custom properties
+
+{ &quot;schemes&quot;: { &quot;light&quot;: { &quot;primary&quot;: &quot;#8F4C33&quot; } } }
+Material Theme export
+
+{ &quot;variables&quot;: { &quot;colors&quot;: { &quot;name&quot;: &quot;Colors&quot;, &quot;tokens&quot;: { &quot;primary&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: &quot;#4A3C78&quot; } } } }
+DTCG - with collection
+
+{ &quot;variables&quot;: { &quot;colorModes&quot;: { &quot;name&quot;: &quot;Colors&quot;, &quot;modes&quot;: [&quot;Light&quot;,&quot;Dark&quot;], &quot;tokens&quot;: { &quot;primary&quot;: { &quot;$type&quot;: &quot;color&quot;, &quot;$value&quot;: { &quot;Light&quot;: &quot;#4A3C78&quot;, &quot;Dark&quot;: &quot;#8B7AB8&quot; } } } } }
+DTCG - with collections + light/dark modes"></textarea>
+
+ <div class="callout" style="background:#271e1a;border-radius:14px;padding:14px 16px;margin-top:4px;position:relative">
+  <button onclick="this.closest('.callout').remove()" style="position:absolute;top:4px;right:4px;width:40px;height:40px;background:none;border:none;color:#d8c2bb;font-size:14px;cursor:pointer;padding:0;display:flex;justify-content:center;align-items:center" aria-label="Close">✕</button>
+  <div style="font-size:13px;font-weight:500;margin-bottom:6px;color:#d8c2bb">You can generate a theme template file here</div>
+  <div style="font-size:12px;line-height:17px;color:#d8c2bb;display:flex;flex-direction:column;margin-top:-2px">
+    <div style="margin-bottom:0px;margin-top:0px"><span style="color:#d8c2bb">→</span> <a href="https://material-foundation.github.io/material-theme-builder/" target="_blank" style="color:#d8c2bb;text-decoration:underline;font-weight:300;line-height:18px;font-size:12px">Google Material Theme Builder (JSON)</a></div>
+     <div style="margin-top:1px"><span style="color:#d8c2bb">→</span> <a href="https://tweakcn.com/editor/theme" target="_blank" style="color:#d8c2bb;text-decoration:underline;font-weight:300;line-height:18px;font-size:12px">Shadcn/ui Theme Builder (CSS)</a></div>
+    <div style="margin-top:1px"><span style="color:#d8c2bb">→</span> <a href="https://www.designtokens.org/tr/2025.10/format/" target="_blank" style="color:#d8c2bb;text-decoration:underline;font-weight:300;line-height:18px;font-size:12px">DTCG format spec — structured tokens (JSON)</a></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:10px;display:flex;justify-content:flex-end;align-items:center;gap:8px">
+  <button class="btn-secondary btn-sm" id="btn-load-file" onclick="document.getElementById('file-input').click()" style="display:flex;align-items:center;justify-content:center;gap:6px">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    Import file
+  </button>
+  <button class="btn-primary" id="btn-parse" onclick="doParse()" disabled style="display:flex;align-items:center;justify-content:center;padding:8px 20px 8px 18px">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    Analyze tokens
+  </button>
+</div>
+
+  <div id="parse-result" style="margin-top:4px;font-size:13px;min-height:18px"></div>
+
+  <div id="analysis-header" style="margin-top:32px;margin-bottom:14px;display:none;border-top:1px solid #53433e;padding-top:12px">
+  <h3 id="analysis-title" style="font-size:18px;font-weight:600;margin-bottom:0;color:var(--figma-color-text);line-height:130%"></h3>
+</div>
+
+<div id="import-alert" class="alert" role="alert">
+  <button onclick="dismissAlert()" class="alert-close" style="position:absolute;top:4px;right:4px;width:40px;height:40px;background:none;border:none;font-size:14px;cursor:pointer;padding:0;display:flex;justify-content:center;align-items:center" aria-label="Close">✕</button>
+  <div class="alert-title" id="alert-title"></div>
+  <div class="alert-desc" id="alert-desc"></div>
+</div>
+
+<input type="file" id="file-input" accept=".json,.css" style="display:none" onchange="loadFile(event)">
+
+<div id="collections-config" style="padding-bottom:100px">
+  <div id="config-cards"></div>
+</div>
+
+<div id="footer-actions" style="position:fixed;bottom:0;left:0;right:0;display:none;padding:24px 20px 26px 20px;background:var(--figma-color-bg);border-top:1px solid var(--figma-color-border)">
+  <div class="row" style="margin-top:0">
+    <button class="btn-secondary" id="btn-import" onclick="doImport()" style="width:100%;height:48px;display:flex;align-items:center;justify-content:center;padding:8px 20px 8px 18px;background:#e7beaf;color:#442a20;font-size:15px">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#442a20" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16"/><path d="M21 14v-4a2 2 0 0 0-2-2h-3"/></svg>
+      Import variables to Figma
+    </button>
+  </div>
+</div>
+
+<div class="progress" id="progress">
+  <div class="progress-label">
+    <span>Importing progress</span>
+    <span class="progress-pct" id="progress-pct">0%</span>
+  </div>
+  <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-bar"></div></div>
+</div>
+
+<div class="log" id="log"></div>
+
+<script>
+var parsedData = null;
+var existingCollections = [];
+var parsedCollections = [];
+
+function log(msg, cls) {
+  document.getElementById("log").classList.add("show");
+  var el = document.createElement("div");
+  el.className = "log-entry" + (cls ? " " + cls : "");
+  el.textContent = msg;
+  document.getElementById("log").appendChild(el);
+  document.getElementById("log").scrollTop = document.getElementById("log").scrollHeight;
+}
+
+function doParse() {
+  var raw = document.getElementById("json-in").value.trim();
+  dismissAlert();
+  if (!raw) {
+    document.getElementById("alert-title").textContent = "Nothing to analyze";
+    document.getElementById("alert-desc").textContent = "Paste your design tokens first, then click Analyze tokens.";
+    var alert = document.getElementById("import-alert");
+    alert.className = "alert alert-error show";
+    alert.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  
+  // Quick sanity check before sending to plugin
+  var stripped = stripJsonComments(raw);
+  if (!/^\s*[\{\[]/.test(stripped) && !/^\s*--[\w-]+\s*:/.test(stripped)) {
+    document.getElementById("alert-title").textContent = "Could not detect file format";
+    document.getElementById("alert-desc").textContent = "Paste DTCG JSON, flat tokens, or CSS custom properties (--name: value). Make sure the content starts with {, [, or --.";
+    var alert = document.getElementById("import-alert");
+    alert.className = "alert alert-error show";
+    alert.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  
+  parsedData = raw;
+  
+  if (useMock) {
+    setTimeout(function() {
+      window.onmessage({ data: { pluginMessage: { type: "preview-json", payload: raw } } });
+      window.onmessage({ data: { pluginMessage: { type: "get-existing-collections" } } });
+    }, 50);
+  } else {
+    parent.postMessage({ pluginMessage: { type: "preview-json", payload: raw } }, "*");
+    parent.postMessage({ pluginMessage: { type: "get-existing-collections" } }, "*");
+  }
+}
+
+function scrollToResults() {
+  var header = document.getElementById("analysis-header");
+  if (header && header.style.display !== "none") {
+    header.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+function getExistingCollections() {
+  parent.postMessage({ pluginMessage: { type: "get-existing-collections" } }, "*");
+}
+
+function buildConfigUI() {
+  var container = document.getElementById("config-cards");
+  container.innerHTML = "";
+
+  var totalTokens = 0;
+
+  var sorted = parsedCollections.slice().sort(function(a, b) {
+    if (a.sourceKey === "imported") return -1;
+    if (b.sourceKey === "imported") return 1;
+    return 0;
+  });
+  sorted.forEach(function (pc, idx) {
+    totalTokens += pc.tokenCount;
+
+    var card = document.createElement("div");
+    card.className = "collection-card" + (pc.sourceKey === "imported" ? " card-flat" : "");
+    card.id = "cc-" + idx;
+
+    var hasModes = pc.modes && pc.modes.length > 0;
+    var label = pc.sourceKey === "imported" ? "Tokens without collection" : "Collection: " + esc(pc.name);
+    var html = '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center">';
+    html += '<h3 style="font-size:12px;font-weight:400;letter-spacing:0.03em;text-transform:uppercase;color:#f1dfd9;margin:0">' + label + '</h3>';
+    html += '<span class="badge">' + pc.tokenCount + ' tokens</span>';
+    html += '</div>';
+    if (hasModes) {
+      html += '<div class="mode-list">';
+      pc.modes.forEach(function (mode) {
+        html += '<div class="mode-list-item">';
+        html += '<span style="font-size:12px;font-weight:400;letter-spacing:0.03em;text-transform:uppercase;color:var(--figma-color-text-secondary,#9e9e9e)">Mode: ' + esc(mode) + '</span>';
+        html += '<span class="badge-tertiary" style="font-size:11px">' + pc.tokenCount + ' tokens</span>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    html += '</div>';
+
+    html += '<label style="font-weight:500;display:block;margin-bottom:6px">Import action <span style="color:#ff6b6b">*</span></label>';
+    html += '<select id="target-' + idx + '" required onchange="setTarget(' + idx + ',this.value)" style="width:100%;cursor:pointer">';
+    html += '<option value="" disabled selected>Select import action</option>';
+    html += '<option value="new">Create new collection</option>';
+    html += '<option value="existing"' + (existingCollections.length === 0 ? ' disabled' : '') + ' data-subtitle="No existing collections in this Figma file \u2014 create a new one instead.">Import to existing collection</option>';
+    html += '<option value="skip">Don\'t import</option></select>';
+
+    html += '<div id="new-name-' + idx + '" style="margin-top:10px;display:none">';
+    html += '<label style="font-weight:500;display:block;margin-bottom:6px">Collection name <span style="color:#ff6b6b">*</span></label>';
+    html += '<input type="text" id="name-' + idx + '" placeholder="Type collection name" style="width:100%" required>';
+    html += '<span id="error-name-' + idx + '" class="field-error-msg">Enter collection name</span>';
+    html += '</div>';
+
+    html += '<div id="existing-name-' + idx + '" style="margin-top:10px;display:none">';
+    html += '<label style="font-weight:500;display:block;margin-bottom:6px">Existing collections <span style="color:#ff6b6b">*</span></label>';
+    html += '<select id="existing-col-' + idx + '" required style="width:100%" onchange="selectExistingCol(' + idx + ', this.value)">';
+    html += '<option value="" disabled selected>Select Figma collections</option>';
+    existingCollections.forEach(function (ec) { html += '<option value="' + esc(ec.id) + '">' + esc(ec.name) + '</option>'; });
+    html += '</select>';
+    html += '<span id="error-existing-col-' + idx + '" class="field-error-msg">Select existing collection</span>';
+    html += '</div>';
+
+    html += '<div id="var-action-' + idx + '" style="margin-top:10px;display:none">';
+    html += '<label style="display:block;margin-bottom:6px">Variables handling <span style="color:#ff6b6b">*</span></label>';
+    html += '<div class="radio-group" id="action-' + idx + '">';
+    html += '<label><input type="radio" name="action-' + idx + '" value="merge"> Merge</label>';
+    html += '<label><input type="radio" name="action-' + idx + '" value="replace"> Replace existing variables</label></div></div>';
+
+    card.innerHTML = html;
+    container.appendChild(card);
+  });
+
+  document.getElementById("collections-config").classList.add("show");
+  document.getElementById("collections-config").style.display = "";
+  var totalModes = 0;
+  parsedCollections.forEach(function (pc) {
+    totalModes += (pc.modes && pc.modes.length > 0) ? pc.modes.length : 0;
+  });
+  var pr = document.getElementById("analysis-title");
+  pr.innerHTML = "Ready to import:<br>" + totalTokens + " tokens via " + parsedCollections.length + " collections, " + totalModes + " modes";
+
+  var multiMode = parsedCollections.some(function(pc) { return pc.modes && pc.modes.length > 1; });
+  var planInfo = document.getElementById("plan-info");
+  if (multiMode) {
+    if (!planInfo) {
+      planInfo = document.createElement("div");
+      planInfo.id = "plan-info";
+      planInfo.className = "alert alert-info";
+      planInfo.style.marginBottom = "12px";
+      planInfo.style.marginTop = "12px";
+      var closeBtn = document.createElement("button");
+      closeBtn.innerHTML = "✕";
+      closeBtn.className = "alert-close";
+      closeBtn.style.cssText = "position:absolute;top:4px;right:4px;width:40px;height:40px;background:none;border:none;font-size:14px;cursor:pointer;padding:0;display:flex;justify-content:center;align-items:center";
+      closeBtn.onclick = function() { planInfo.classList.remove("show"); };
+      planInfo.appendChild(closeBtn);
+      var title = document.createElement("div");
+      title.className = "alert-title";
+      title.textContent = "Multi-mode tokens detected";
+      var desc = document.createElement("div");
+      desc.className = "alert-desc";
+      desc.textContent = "If you have Figma free plan, you can have 1 mode per collection. Extra modes will fall back to the default mode.";
+      planInfo.appendChild(title);
+      planInfo.appendChild(desc);
+      document.getElementById("analysis-header").after(planInfo);
+    }
+    planInfo.classList.add("show");
+  } else if (planInfo) {
+    planInfo.classList.remove("show");
+  }
+  document.getElementById("analysis-header").style.display = "block";
+  document.getElementById("footer-actions").style.display = "block";
+  scrollToResults();
+  setTimeout(function() {
+    var selects = document.querySelectorAll("select");
+    for (var i = 0; i < selects.length; i++) convertSelect(selects[i]);
+  }, 10);
+}
+
+function setTarget(idx, value) {
+  var isSkip = value === "skip";
+  var isExisting = value === "existing";
+  var isNew = value === "new";
+  document.getElementById("new-name-" + idx).style.display = isNew ? "block" : "none";
+  document.getElementById("existing-name-" + idx).style.display = isExisting ? "block" : "none";
+  document.getElementById("var-action-" + idx).style.display = "none";
+  var nameInput = document.getElementById("name-" + idx);
+  var existingCol = document.getElementById("existing-col-" + idx);
+  if (nameInput) nameInput.disabled = !isNew;
+  if (existingCol) existingCol.disabled = !isExisting;
+  var el = document.getElementById(isNew ? "new-name-" + idx : isExisting ? "existing-name-" + idx : null);
+  if (el) setTimeout(function() { el.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, 50);
+}
+
+function selectExistingCol(idx, value) {
+  document.getElementById("var-action-" + idx).style.display = value ? "block" : "none";
+  if (value) {
+    var el = document.getElementById("var-action-" + idx);
+    setTimeout(function() { el.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, 50);
+  }
+}
+
+function stripJsonComments(str) {
+  str = str.replace(/\/\*[\s\S]*?\*\//g, '');
+  str = str.replace(/^\s*\/\/.*$/gm, '');
+  return str;
+}
+
+function convertSelect(selectEl) {
+  if (document.getElementById(selectEl.id + "-cdd")) return;
+  selectEl.style.cssText = "display:none!important;position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;";
+  var cdd = document.createElement("div");
+  cdd.className = "cdd";
+  cdd.id = selectEl.id + "-cdd";
+  if (selectEl.disabled) cdd.classList.add("disabled");
+  var trigger = document.createElement("div");
+  trigger.className = "cdd-trigger placeholder";
+  var selOpt = selectEl.options[selectEl.selectedIndex];
+  trigger.textContent = selOpt ? selOpt.text : "";
+  if (selOpt && selOpt.value) trigger.classList.remove("placeholder");
+  var arrowSvg =
+    '<svg class="cdd-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+  trigger.insertAdjacentHTML("beforeend", arrowSvg);
+  var menu = document.createElement("div");
+  menu.className = "cdd-menu";
+  for (var i = 0; i < selectEl.options.length; i++) {
+    (function(opt, idx) {
+      if (opt.value === "" && opt.disabled) return;
+      var item = document.createElement("div");
+      item.className = "cdd-item";
+      if (opt.disabled) item.classList.add("disabled");
+      if (idx === selectEl.selectedIndex) item.classList.add("active");
+      if (opt.dataset && opt.dataset.subtitle) {
+        item.style.cssText = "display:flex;flex-direction:column;width:100%;align-items:flex-start";
+        var titleSpan = document.createElement("div");
+        titleSpan.textContent = opt.text;
+        var subtitleSpan = document.createElement("div");
+        subtitleSpan.style.cssText = "font-size:11px;opacity:0.7";
+        subtitleSpan.textContent = opt.dataset.subtitle;
+        item.appendChild(titleSpan);
+        item.appendChild(subtitleSpan);
+      } else {
+        item.textContent = opt.text;
+      }
+      if (!opt.disabled) {
+        item.addEventListener("click", function(e) {
+          e.stopPropagation();
+          selectEl.selectedIndex = idx;
+          var arrow = trigger.querySelector(".cdd-arrow");
+          trigger.textContent = opt.text;
+          if (opt.dataset && opt.dataset.subtitle) {
+            trigger.textContent = opt.text;
+          }
+          if (arrow) trigger.appendChild(arrow);
+          trigger.classList.remove("placeholder");
+          var items = menu.querySelectorAll(".cdd-item");
+          for (var j = 0; j < items.length; j++) items[j].classList.remove("active");
+          item.classList.add("active");
+          menu.classList.remove("open");
+          if (arrow) arrow.classList.remove("open");
+          var evt = new Event("change", { bubbles: true });
+          selectEl.dispatchEvent(evt);
+        });
+      }
+      menu.appendChild(item);
+    })(selectEl.options[i], i);
+  }
+  trigger.addEventListener("click", function(e) {
+    if (this.closest(".cdd").classList.contains("disabled")) return;
+    e.stopPropagation();
+    menu.classList.toggle("open");
+    var arrow = trigger.querySelector(".cdd-arrow");
+    if (arrow) arrow.classList.toggle("open", menu.classList.contains("open"));
+  });
+  document.addEventListener("click", function(e) {
+    if (!cdd.contains(e.target)) {
+      menu.classList.remove("open");
+      var arrow = trigger.querySelector(".cdd-arrow");
+      if (arrow) arrow.classList.remove("open");
+    }
+  });
+  cdd.appendChild(trigger);
+  cdd.appendChild(menu);
+  selectEl.parentNode.insertBefore(cdd, selectEl);
+}
+
+function dismissAlert() {
+  document.getElementById("import-alert").className = "alert";
+}
+
+function showHelp() {
+  var existing = document.getElementById("help-popover");
+  if (existing) { existing.remove(); return; }
+  var popover = document.createElement("div");
+  popover.id = "help-popover";
+  popover.style.cssText = "position:absolute;top:66px;right:16px;width:300px;background:#2d2421;border:1px solid var(--figma-color-border);border-radius:12px;padding:14px 16px;box-shadow:0 10px 24px rgba(0,0,0,0.3);z-index:200";
+  popover.innerHTML = "<div style=\"font-size:13px;font-weight:600;margin-bottom:6px;color:var(--figma-color-text)\">Need help or report an issue?</div><div style=\"font-size:12px;line-height:1.5;color:var(--figma-color-text-secondary,#9e9e9e)\">Reach me out at <a href=\"mailto:studio@monikazapisek.com\" style=\"color:inherit;text-decoration:underline\">studio@monikazapisek.com</a> or open an issue on <a href=\"https://github.com/monikazapisekstudio/token-forge/issues\" target=\"_blank\" style=\"color:inherit;text-decoration:underline\">GitHub</a>.</div>";
+  var closeBtn = document.createElement("button");
+  closeBtn.innerHTML = "✕";
+  closeBtn.style.cssText = "position:absolute;top:4px;right:4px;width:32px;height:32px;background:none;border:none;font-size:14px;cursor:pointer;padding:0;display:flex;justify-content:center;align-items:center;color:var(--figma-color-text-secondary)";
+  closeBtn.onclick = function() { popover.remove(); };
+  popover.insertBefore(closeBtn, popover.firstChild);
+  document.body.appendChild(popover);
+}
+
+function doImport() {
+  if (!parsedData) { log("Nothing parsed. Click Parse JSON first.", "err"); return; }
+
+  // Clear previous errors
+  dismissAlert();
+  document.querySelectorAll(".field-error").forEach(function(el) { el.classList.remove("field-error"); });
+  document.querySelectorAll(".field-error-msg").forEach(function(el) { el.classList.remove("show"); });
+
+  var errors = [];
+  var importConfig = [];
+
+  parsedCollections.forEach(function (pc, idx) {
+    var selectEl = document.getElementById('target-' + idx);
+    var targetType = selectEl ? selectEl.value : "";
+    if (!targetType) {
+      errors.push("select import action");
+      var cdd = document.getElementById("target-" + idx + "-cdd");
+      if (cdd) { var t = cdd.querySelector(".cdd-trigger"); if (t) t.classList.add("field-error"); }
+      return;
+    }
+    if (targetType === "skip") return;
+
+    if (targetType === "new") {
+      var nameInput = document.getElementById("name-" + idx);
+      if (!nameInput || !nameInput.value.trim()) {
+        errors.push("enter collection name");
+        if (nameInput) nameInput.classList.add("field-error");
+        var errMsg = document.getElementById("error-name-" + idx);
+        if (errMsg) errMsg.classList.add("show");
+        return;
+      }
+    }
+
+    if (targetType === "existing") {
+      var existingCol = document.getElementById("existing-col-" + idx);
+      if (!existingCol || !existingCol.value) {
+        errors.push("select existing collection");
+        var cdd = document.getElementById("existing-col-" + idx + "-cdd");
+        if (cdd) { var t = cdd.querySelector(".cdd-trigger"); if (t) t.classList.add("field-error"); }
+        var errMsg = document.getElementById("error-existing-col-" + idx);
+        if (errMsg) errMsg.classList.add("show");
+        return;
+      }
+      var checked = document.querySelector('input[name="action-' + idx + '"]:checked');
+      if (!checked) {
+        errors.push("select variables handling");
+        return;
+      }
+    }
+
+    var hasModes = pc.modes && pc.modes.length > 0;
+    var cfg = {
+      sourceKey: pc.sourceKey,
+      targetType: targetType,
+      collectionName: targetType === "new" ? (document.getElementById("name-" + idx) || {}).value || pc.name : "",
+      collectionId: targetType === "existing" ? (document.getElementById("existing-col-" + idx) || {}).value || "" : "",
+      variableAction: targetType === "existing" ?
+        (document.querySelector('input[name="action-' + idx + '"]:checked') || {}).value || "replace" : "create",
+      modes: hasModes ? pc.modes.map(function (mode) {
+        return { sourceMode: mode, targetType: "new", targetModeName: mode };
+      }) : []
+    };
+    importConfig.push(cfg);
+  });
+
+  if (errors.length > 0) {
+    var errorTypes = new Set(errors);
+    var title, desc;
+    if (errorTypes.size === 1) {
+      var err = errors[0];
+      if (err === "select import action") {
+        title = "Import action not selected";
+        desc = "Choose an action for each collection — Create new, Import to existing, or Don't import.";
+      } else if (err === "enter collection name") {
+        title = "Collection name is missing";
+        desc = "Type a name for the new collection and try again.";
+      } else if (err === "select existing collection") {
+        title = "Target collection not chosen";
+        desc = "Select an existing collection to import your tokens into.";
+      } else {
+        title = "Import method not set";
+        desc = "Choose Merge or Replace to decide how to handle existing variables.";
+      }
+    } else {
+      title = "A few things need attention";
+      desc = "Fix the highlighted fields above and try again.";
+    }
+    document.getElementById("alert-title").textContent = title;
+    document.getElementById("alert-desc").textContent = desc;
+    var alert = document.getElementById("import-alert");
+    alert.className = "alert alert-error show";
+    alert.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
+  if (importConfig.length === 0) {
+    document.getElementById("alert-title").textContent = "Nothing to import";
+    document.getElementById("alert-desc").textContent = "Every collection is set to Don't import. Change at least one to Create new or Import to existing and try again.";
+    var alert = document.getElementById("import-alert");
+    alert.className = "alert alert-info show";
+    alert.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
+  document.getElementById("btn-import").disabled = true;
+  document.getElementById("btn-parse").disabled = true;
+  document.getElementById("progress").classList.add("show");
+  parent.postMessage({ pluginMessage: { type: "import-configured", config: importConfig, data: parsedData } }, "*");
+}
+
+function loadSample() {
+  var sample = JSON.stringify({
+    variables: {
+      colorModes: {
+        name: "Colors",
+        modes: ["Light", "Dark"],
+        tokens: {
+          "primary": { "$type":"color","$value":"#4A3C78","$description":"Brand primary" },
+          "foreground": { "$type":"color","$value":"#1B1A1F","$description":"Text" },
+          "background": { "$type":"color","$value":"#F6F6FA","$description":"Page" },
+          "destructive": { "$type":"color","$value":"#B91C1C","$description":"Error" },
+          "success": { "$type":"color","$value":"#2B5035","$description":"Success" }
+        }
+      },
+      theme: {
+        name: "Theme",
+        tokens: {
+          "font": {
+            "sans": { "$type":"string","$value":"Inter","$extensions":{"com.figma.scopes":["FONT_FAMILY"]} },
+            "heading": { "$type":"string","$value":"Unbounded","$extensions":{"com.figma.scopes":["FONT_FAMILY"]} }
+          },
+          "size": {
+            "sm": { "$type":"float","$value":14 },
+            "base": { "$type":"float","$value":16 },
+            "lg": { "$type":"float","$value":18 }
+          },
+          "radius": {
+            "sm": { "$type":"float","$value":6 },
+            "md": { "$type":"float","$value":8 },
+            "lg": { "$type":"float","$value":12 }
+          }
+        }
+      }
+    }
+  }, null, 2);
+  document.getElementById("json-in").value = sample;
+  onJsonInput();
+  doParse();
+}
+
+function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+function loadFile(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById("json-in").value = e.target.result;
+    if (typeof onJsonInput === "function") onJsonInput();
+  };
+  reader.readAsText(file);
+}
+
+window.onmessage = function (event) {
+  var msg = event.data.pluginMessage;
+  if (!msg) return;
+
+  if (msg.type === "existing-collections") {
+    existingCollections = msg.collections || [];
+    if (parsedCollections.length > 0) buildConfigUI();
+  }
+
+  if (msg.type === "preview-result") {
+    if (msg.error) {
+      document.getElementById("alert-title").textContent = "Could not read your tokens";
+      document.getElementById("alert-desc").textContent = msg.error;
+      var alert = document.getElementById("import-alert");
+      alert.className = "alert alert-error show";
+      alert.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    parsedCollections = msg.collections || [];
+    if (msg.wrappedData) {
+      parsedData = msg.wrappedData;
+    }
+    if (existingCollections.length > 0) buildConfigUI();
+  }
+
+  if (msg.type === "progress") {
+    if (msg.total > 0) {
+      var pct = Math.round((msg.current / msg.total) * 100);
+      document.getElementById("progress-bar").style.width = pct + "%";
+      document.getElementById("progress-pct").textContent = pct + "%";
+    }
+    if (msg.status === "done" || msg.status === "error") {
+      // status handled by import-done alert
+    }
+  }
+
+  if (msg.type === "log") { log(msg.message, "ok"); }
+
+  if (msg.type === "import-done") {
+    document.getElementById("btn-import").disabled = false;
+    document.getElementById("btn-parse").disabled = false;
+    document.getElementById("progress").classList.remove("show");
+    document.getElementById("analysis-header").style.display = "none";
+    if (msg.success) {
+      document.getElementById("collections-config").className = "";
+      document.getElementById("collections-config").style.display = "none";
+      document.getElementById("analysis-header").style.display = "none";
+      document.getElementById("footer-actions").style.display = "none";
+      document.getElementById("alert-title").textContent = "Import complete";
+      var desc = msg.count + " variables imported.";
+      if (msg.errors && msg.errors.length > 0) {
+        desc += " " + msg.errors.length + " failed. ";
+        document.getElementById("alert-desc").innerHTML = desc + '<a href="#" onclick="this.nextElementSibling.style.display=\'block\';this.style.display=\'none\';return false" style="color:inherit;text-decoration:underline">Show details</a><div style="display:none;margin-top:4px;font-size:11px;opacity:0.8">' + msg.errors.join("<br>") + "</div>";
+      } else {
+        document.getElementById("alert-desc").textContent = desc;
+      }
+      var alert = document.getElementById("import-alert");
+      alert.className = "alert alert-success show";
+      alert.scrollIntoView({ behavior: "smooth", block: "center" });
+      parent.postMessage({ pluginMessage: { type: "resize", width: 480, height: 780 } }, "*");
+    } else {
+      document.getElementById("alert-title").textContent = "Could not complete import";
+      document.getElementById("alert-desc").textContent = msg.error || "Something went wrong. Check your token file and try again.";
+      var alert = document.getElementById("import-alert");
+      alert.className = "alert alert-error show";
+      alert.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
+
+  if (msg.type === "pong") { }
+};
+
+var isFigma = false;
+var useMock = false;
+
+try {
+  isFigma = !!(parent && parent !== window && parent.postMessage);
+  if (isFigma) useMock = false;
+} catch(e) { useMock = true; }
+
+if (!isFigma || useMock) {
+  useMock = true;
+  document.body.insertAdjacentHTML("afterbegin", '<div class="dev-banner">DEV MODE - running in browser. UI interactions work, imports are simulated.</div>');
+
+  var devStyle = document.createElement("style");
+  devStyle.textContent =
+    ':root{--figma-color-text:#e6e6e6;--figma-color-text-secondary:#9e9e9e;--figma-color-text-tertiary:#6e6e6e;'+
+    '--figma-color-bg:#271e1a;--figma-color-bg-secondary:#3a2e26;--figma-color-bg-hover:#4a3a32;'+
+    '--figma-color-bg-brand:#0d99ff;--figma-color-bg-brand-hover:#0b87e0;'+
+    '--figma-color-border:#4a3a32;--figma-color-border-selected:#0d99ff;'+
+    '--figma-color-text-success:#14ae5c;--figma-color-text-danger:#ec221f;--figma-color-bg-success:#e6f7ed}';
+  document.head.appendChild(devStyle);
+
+  var mockCollections = [
+    { id: "mock-col-1", name: "Colors", modes: [{modeId:"mock-mode-1",name:"Light"},{modeId:"mock-mode-2",name:"Dark"}] },
+    { id: "mock-col-2", name: "Typography", modes: [{modeId:"mock-mode-3",name:"Mode 1"}] }
+  ];
+
+  window.addEventListener("message", function() {});
+
+  var originalOnMessage = window.onmessage;
+  window.onmessage = function(event) {
+    if (!event.data || !event.data.pluginMessage) {
+      if (originalOnMessage) originalOnMessage(event);
+      return;
+    }
+    var msg = event.data.pluginMessage;
+
+    if (msg.type === "preview-result" || msg.type === "existing-collections" ||
+        msg.type === "progress" || msg.type === "log" || msg.type === "import-done" || msg.type === "pong") {
+      if (originalOnMessage) { originalOnMessage(event); return; }
+    }
+
+    setTimeout(function() {
+      if (msg.type === "ping") {
+        window.postMessage({ pluginMessage: { type: "pong" } }, "*");
+      }
+      else if (msg.type === "get-existing-collections") {
+        window.postMessage({ pluginMessage: { type: "existing-collections", collections: mockCollections } }, "*");
+      }
+      else if (msg.type === "preview-json") {
+        try {
+          var raw = typeof msg.payload === "string" ? stripJsonComments(msg.payload) : msg.payload;
+          var data, wrappedData, autoWrapped = false;
+
+          // Check if any line is a CSS custom property
+          var hasCSS = typeof raw === "string" && raw.split("\n").some(function(l) { return /^\s*--[\w-]+\s*:/.test(l); });
+          if (hasCSS) {
+            var cssTokens = {};
+            raw.split(/[;\n]/).forEach(function(line) {
+              var m = line.match(/^\s*--([\w-]+)\s*:\s*(.+)/);
+              if (!m) return;
+              var name = m[1].trim(), val = m[2].trim(), type = "string";
+              if (/^#[0-9a-fA-F]{3,8}$/.test(val)) type = "color";
+              else if (/^\d+(\.\d+)?$/.test(val)) type = "number";
+              cssTokens[name] = { "$type": type, "$value": val };
+            });
+            data = { variables: { imported: { name: "Imported from CSS", tokens: cssTokens } } };
+            wrappedData = data; autoWrapped = true;
+          } else {
+            data = typeof raw === "string" ? JSON.parse(stripJsonComments(raw)) : raw;
+          }
+
+          if (!data.variables) {
+            if (data.schemes && data.schemes.light && typeof data.schemes.light === "object") {
+              var mtModes = Object.keys(data.schemes);
+              var mtTokens = {};
+              var allKeys = {};
+              mtModes.forEach(function(mode) { Object.keys(data.schemes[mode]).forEach(function(k) { allKeys[k] = true; }); });
+              if (data.coreColors) Object.keys(data.coreColors).forEach(function(k) { allKeys[k] = true; });
+              Object.keys(allKeys).forEach(function(k) {
+                var modeVals = {};
+                mtModes.forEach(function(mode) { var v = data.schemes[mode][k]; if (v) modeVals[mode] = v; });
+                if (data.coreColors && data.coreColors[k]) {
+                  var v = data.coreColors[k];
+                  mtTokens[k] = { "$type": /^#/.test(v) ? "color" : "string", "$value": v, "$extensions": { "com.figma.modes": modeVals } };
+                } else { mtTokens[k] = { "$type": "color", "$value": modeVals }; }
+              });
+              data = { variables: { materialTheme: { name: "Material Theme", modes: mtModes, tokens: mtTokens } } };
+              autoWrapped = true;
+            } else {
+            var keys = Object.keys(data);
+            var hasTok = keys.some(function(k) { var v = data[k]; return v && typeof v === "object" && "$type" in v && "$value" in v; });
+            if (hasTok) {
+              data = { variables: { imported: { name: "Imported Tokens", tokens: data } } };
+              autoWrapped = true;
+            } else {
+              var flat = {};
+              keys.forEach(function(k) { flat[k] = { "$type": "string", "$value": String(data[k]) }; });
+              data = { variables: { imported: { name: "Imported Tokens", tokens: flat } } };
+              autoWrapped = true;
+            }
+            }
+          }
+          wrappedData = wrappedData || data;
+
+          var previewCols = [];
+          Object.keys(data.variables).forEach(function(key) {
+            var c = data.variables[key];
+            var count = 0;
+            function walk(o) {
+              if (!o || typeof o !== "object") return;
+              if (o.$type && "$value" in o) { count++; return; }
+              Object.keys(o).forEach(function(k){ walk(o[k]); });
+            }
+            if (c.tokens) walk(c.tokens);
+            previewCols.push({ sourceKey: key, name: c.name || key, tokenCount: count, modes: c.modes || [], isModeBased: (c.modes || []).length > 0 });
+          });
+          window.postMessage({ pluginMessage: { type: "preview-result", collections: previewCols, wrappedData: wrappedData, autoWrapped: autoWrapped } }, "*");
+        } catch(e) {
+          window.postMessage({ pluginMessage: { type: "preview-result", error: "Invalid JSON: " + e.message } }, "*");
+        }
+      }
+      else if (msg.type === "import-configured") {
+        window.postMessage({ pluginMessage: { type: "progress", status: "creating-variables", message: "Simulating import...", current: 50, total: 100 } }, "*");
+        setTimeout(function() {
+          window.postMessage({ pluginMessage: { type: "log", message: "Done: colorModes in \"Colors\"" } }, "*");
+          window.postMessage({ pluginMessage: { type: "log", message: "Done: theme in \"Typography\"" } }, "*");
+          window.postMessage({ pluginMessage: { type: "progress", status: "done", message: "Complete (simulated)", current: 100, total: 100 } }, "*");
+          window.postMessage({ pluginMessage: { type: "import-done", success: true, count: 42 } }, "*");
+        }, 800);
+      }
+    }, 50);
+  };
+}
+
+function onJsonInput() {
+  var raw = document.getElementById("json-in").value.trim();
+  document.getElementById("btn-parse").disabled = !raw;
+  document.getElementById("parse-result").textContent = "";
+}
+
+document.getElementById("json-in").addEventListener("input", onJsonInput);
+
+onJsonInput();
+
+parent.postMessage({ pluginMessage: { type: "ping" } }, "*");
+</script>
+</body>
+</html>

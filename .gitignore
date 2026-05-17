@@ -1,0 +1,8 @@
+node_modules/
+.vscode/
+.idea/
+*.log
+.DS_Store
+journal.md
+New Dokument tekstowy.txt
+*.private.md
