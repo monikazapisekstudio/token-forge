@@ -41,7 +41,9 @@ Test in Figma: **Plugins → Development → Import plugin from manifest...** �
 
 MIT
 
-## Support
+## Links
 
-Issues: https://github.com/monikazapisekstudio/token-forge/issues
-Email: studio@monikazapisek.com
+- Website: https://monikazapisekstudio.github.io/token-forge/
+- Figma Community: https://figma.com/community/plugin/1637624131733067469/token-forge
+- Issues: https://github.com/monikazapisekstudio/token-forge/issues
+- Email: studio@monikazapisek.com
